@@ -56,10 +56,6 @@ const memberSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
-
-// Scoped to department, not global — the same email could plausibly
-// belong to a member in two different departments. sparse so
-// admin-imported members without an email yet don't collide on null.
 memberSchema.index({ department: 1, email: 1 }, { unique: true, sparse: true });
 
 memberSchema.index({
