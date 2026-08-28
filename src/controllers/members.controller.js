@@ -2,21 +2,18 @@ import * as memberService from '../services/member.service.js';
 
 export async function getMembers(req, res) {
   try {
-    const departmentId = req.user.department;
-
     const members = await memberService.getMembers({
-      departmentId,
+      user: req.user,
       search: req.query.search || '',
     });
 
-    res.json({
-      success: true,
+    res.status(200).json({
       members,
     });
   } catch (error) {
     console.error('getMembers error:', error);
+
     res.status(500).json({
-      success: false,
       message: error.message || 'Failed to load members',
     });
   }
@@ -24,15 +21,9 @@ export async function getMembers(req, res) {
 
 export async function getMember(req, res) {
   try {
-    const departmentId = req.user.department;
+    const member = await memberService.getMemberById(req.params.id, req.user);
 
-    const member = await memberService.getMemberById(
-      req.params.id,
-      departmentId,
-    );
-
-    res.json({
-      success: true,
+    res.status(200).json({
       member,
     });
   } catch (error) {
@@ -41,7 +32,6 @@ export async function getMember(req, res) {
     const status = error.message === 'Member not found' ? 404 : 500;
 
     res.status(status).json({
-      success: false,
       message: error.message || 'Failed to load member',
     });
   }
@@ -49,16 +39,13 @@ export async function getMember(req, res) {
 
 export async function updateMember(req, res) {
   try {
-    const departmentId = req.user.department;
-
     const member = await memberService.updateMember(
       req.params.id,
-      departmentId,
+      req.user,
       req.body,
     );
 
-    res.json({
-      success: true,
+    res.status(200).json({
       message: 'Member updated successfully',
       member,
     });
@@ -68,7 +55,6 @@ export async function updateMember(req, res) {
     const status = error.message === 'Member not found' ? 404 : 400;
 
     res.status(status).json({
-      success: false,
       message: error.message || 'Failed to update member',
     });
   }
@@ -76,16 +62,13 @@ export async function updateMember(req, res) {
 
 export async function changeMemberStatus(req, res) {
   try {
-    const departmentId = req.user.department;
-
     const member = await memberService.changeMemberStatus(
       req.params.id,
-      departmentId,
+      req.user,
       req.body.status,
     );
 
-    res.json({
-      success: true,
+    res.status(200).json({
       message: 'Member status updated successfully',
       member,
     });
@@ -95,7 +78,6 @@ export async function changeMemberStatus(req, res) {
     const status = error.message === 'Member not found' ? 404 : 400;
 
     res.status(status).json({
-      success: false,
       message: error.message || 'Failed to change member status',
     });
   }
@@ -103,18 +85,14 @@ export async function changeMemberStatus(req, res) {
 
 export async function changeMemberUnit(req, res) {
   try {
-    const departmentId = req.user.department;
-
     const member = await memberService.changeMemberUnit(
       req.params.id,
-      departmentId,
+      req.user,
       req.body.unitId,
-      req.user._id,
       req.body.note,
     );
 
-    res.json({
-      success: true,
+    res.status(200).json({
       message: 'Member unit updated successfully',
       member,
     });
@@ -124,7 +102,6 @@ export async function changeMemberUnit(req, res) {
     const status = error.message === 'Member not found' ? 404 : 400;
 
     res.status(status).json({
-      success: false,
       message: error.message || 'Failed to change member unit',
     });
   }
@@ -132,12 +109,9 @@ export async function changeMemberUnit(req, res) {
 
 export async function deleteMember(req, res) {
   try {
-    const departmentId = req.user.department;
+    await memberService.deleteMember(req.params.id, req.user);
 
-    await memberService.deleteMember(req.params.id, departmentId);
-
-    res.json({
-      success: true,
+    res.status(200).json({
       message: 'Member deleted successfully',
     });
   } catch (error) {
@@ -146,7 +120,6 @@ export async function deleteMember(req, res) {
     const status = error.message === 'Member not found' ? 404 : 500;
 
     res.status(status).json({
-      success: false,
       message: error.message || 'Failed to delete member',
     });
   }

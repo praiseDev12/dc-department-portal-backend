@@ -18,6 +18,7 @@ import { AppError } from './utils/errors.js';
 import { memberAuthRouter } from './routes/memberAuth.route.js';
 import { publicRouter } from './routes/public.route.js';
 import { unitAdminRouter } from './routes/unitAdmin.route.js';
+import { unitRouter } from './routes/unit.route.js';
 
 export const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -41,6 +42,7 @@ app.use('/api/notifications', notificationRouter);
 app.use('/api/member-auth', memberAuthRouter);
 app.use('/api/public', publicRouter);
 app.use('/api/unit-admin-auth', unitAdminRouter);
+app.use('/api/units', unitRouter);
 
 app.use(express.static(clientDist));
 app.get('*', (req, res, next) => {

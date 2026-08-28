@@ -1,9 +1,21 @@
 import { Member } from '../models/Member.js';
+import { Unit } from '../models/Unit.js';
 
-export async function getMembers({ departmentId, search = '' }) {
-  const query = {
-    department: departmentId,
+function buildMemberScope(user) {
+  const scope = {
+    department: user.department,
   };
+
+  // Unit admins can only access members in their own unit
+  if (user.role === 'unit_admin') {
+    scope.unit = user.unit;
+  }
+
+  return scope;
+}
+
+export async function getMembers({ user, search = '' }) {
+  const query = buildMemberScope(user);
 
   if (search.trim()) {
     const searchRegex = new RegExp(search.trim(), 'i');
@@ -25,7 +37,7 @@ export async function getMembers({ departmentId, search = '' }) {
     })
     .populate({
       path: 'unitHistory.movedBy',
-      select: 'fullName',
+      select: 'name',
     })
     .sort({ fullName: 1 })
     .lean();
@@ -33,11 +45,13 @@ export async function getMembers({ departmentId, search = '' }) {
   return members;
 }
 
-export async function getMemberById(memberId, departmentId) {
-  const member = await Member.findOne({
+export async function getMemberById(memberId, user) {
+  const query = {
     _id: memberId,
-    department: departmentId,
-  })
+    ...buildMemberScope(user),
+  };
+
+  const member = await Member.findOne(query)
     .populate('department', 'name')
     .populate('unit', 'name')
     .populate({
@@ -46,7 +60,7 @@ export async function getMemberById(memberId, departmentId) {
     })
     .populate({
       path: 'unitHistory.movedBy',
-      select: 'fullName',
+      select: 'name',
     })
     .lean();
 
@@ -57,7 +71,12 @@ export async function getMemberById(memberId, departmentId) {
   return member;
 }
 
-export async function updateMember(memberId, departmentId, updates) {
+export async function updateMember(memberId, user, updates) {
+  const query = {
+    _id: memberId,
+    ...buildMemberScope(user),
+  };
+
   const allowedFields = [
     'fullName',
     'dateOfBirth',
@@ -82,10 +101,7 @@ export async function updateMember(memberId, departmentId, updates) {
   }
 
   const member = await Member.findOneAndUpdate(
-    {
-      _id: memberId,
-      department: departmentId,
-    },
+    query,
     {
       $set: filteredUpdates,
     },
@@ -102,7 +118,7 @@ export async function updateMember(memberId, departmentId, updates) {
     })
     .populate({
       path: 'unitHistory.movedBy',
-      select: 'fullName',
+      select: 'name',
     });
 
   if (!member) {
@@ -112,16 +128,18 @@ export async function updateMember(memberId, departmentId, updates) {
   return member;
 }
 
-export async function changeMemberStatus(memberId, departmentId, status) {
+export async function changeMemberStatus(memberId, user, status) {
   if (!['active', 'inactive'].includes(status)) {
     throw new Error('Invalid member status');
   }
 
+  const query = {
+    _id: memberId,
+    ...buildMemberScope(user),
+  };
+
   const member = await Member.findOneAndUpdate(
-    {
-      _id: memberId,
-      department: departmentId,
-    },
+    query,
     {
       $set: {
         status,
@@ -142,23 +160,35 @@ export async function changeMemberStatus(memberId, departmentId, status) {
   return member;
 }
 
-export async function changeMemberUnit(
-  memberId,
-  departmentId,
-  newUnitId,
-  movedBy,
-  note,
-) {
+export async function changeMemberUnit(memberId, user, newUnitId, note) {
+  if (!newUnitId) {
+    throw new Error('Unit is required');
+  }
+
+  // Only main admins should be able to move members
+  if (user.role !== 'main_admin') {
+    throw new Error("Only main admins can change a member's unit");
+  }
+
   const member = await Member.findOne({
     _id: memberId,
-    department: departmentId,
+    department: user.department,
   });
 
   if (!member) {
     throw new Error('Member not found');
   }
 
-  if (member.unit?.toString() === newUnitId) {
+  const newUnit = await Unit.findOne({
+    _id: newUnitId,
+    department: user.department,
+  });
+
+  if (!newUnit) {
+    throw new Error('Unit not found');
+  }
+
+  if (member.unit?.toString() === newUnitId.toString()) {
     throw new Error('Member is already assigned to this unit');
   }
 
@@ -167,8 +197,8 @@ export async function changeMemberUnit(
   member.unitHistory.push({
     unit: newUnitId,
     movedAt: new Date(),
-    movedBy,
-    note: note || undefined,
+    movedBy: user._id,
+    note: note?.trim() || undefined,
   });
 
   await member.save();
@@ -181,17 +211,19 @@ export async function changeMemberUnit(
   });
   await member.populate({
     path: 'unitHistory.movedBy',
-    select: 'fullName',
+    select: 'name',
   });
 
   return member;
 }
 
-export async function deleteMember(memberId, departmentId) {
-  const member = await Member.findOneAndDelete({
+export async function deleteMember(memberId, user) {
+  const query = {
     _id: memberId,
-    department: departmentId,
-  });
+    ...buildMemberScope(user),
+  };
+
+  const member = await Member.findOneAndDelete(query);
 
   if (!member) {
     throw new Error('Member not found');

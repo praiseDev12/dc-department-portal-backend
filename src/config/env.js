@@ -10,6 +10,7 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET || 'dev-only-change-me',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '30d',
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  departmentSetupCode: process.env.DEPARTMENT_SETUP_CODE,
   smtp: {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT || 587),
