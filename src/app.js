@@ -21,7 +21,7 @@ import { unitAdminRouter } from './routes/unitAdmin.route.js';
 import { unitRouter } from './routes/unit.route.js';
 import { roleRouter } from './routes/role.route.js';
 
-export const app = express();
+const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientDist = path.resolve(__dirname, '../../client/dist');
 
@@ -29,6 +29,9 @@ app.use(helmet());
 app.use(cors({ origin: env.clientOrigin, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
+app.get('/', (req, res) => {
+  res.json({ message: 'API is running' });
+});
 app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, limit: 80 }));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
@@ -64,3 +67,5 @@ app.use((error, _req, res, _next) => {
     ...(process.env.NODE_ENV !== 'production' && { stack: error.stack }),
   });
 });
+
+export default app;
