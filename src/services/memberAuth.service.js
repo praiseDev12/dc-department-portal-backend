@@ -3,7 +3,6 @@ import { Department } from '../models/Department.js';
 import { Unit } from '../models/Unit.js';
 import { signToken } from '../middleware/auth.js';
 import { AppError } from '../utils/errors.js';
-import { success } from 'zod/v4';
 
 function toPublicMember(member) {
   return {
@@ -31,23 +30,15 @@ export async function registerMember({
   password,
   consentAccepted,
 }) {
+  // Department and unit must already exist — this never creates either one.
+  // That's what keeps department creation restricted to the /onboard flow.
   const departmentDoc = await Department.findById(department);
   if (!departmentDoc) {
-    return {
-      success: false,
-      status: 404,
-      message: 'The selected department was not found',
-    };
     throw new AppError('Selected department was not found', 404);
   }
 
   const unitDoc = await Unit.findOne({ _id: unit, department });
   if (!unitDoc) {
-    return {
-      success: false,
-      status: 404,
-      message: 'Selected unit does not belong to that department',
-    };
     throw new AppError('Selected unit does not belong to that department', 404);
   }
 
@@ -56,11 +47,6 @@ export async function registerMember({
     email: email.toLowerCase(),
   });
   if (existing) {
-    return {
-      success: false,
-      status: 409,
-      message: 'A member with this email already exists in this department',
-    };
     throw new AppError(
       'A member with this email already exists in this department',
       409,
@@ -87,9 +73,8 @@ export async function registerMember({
   await member.save();
 
   return {
-    success: true,
-    status: 201,
-    message: 'Registered Successfully',
+    // role: 'member' is what lets middleware tell member tokens apart
+    // from admin tokens later — see requireMember.js
     token: signToken({ _id: member._id, role: 'member' }),
     member: toPublicMember(member),
   };
@@ -101,18 +86,10 @@ export async function loginMember({ email, password }) {
     status: 'active',
   }).select('+password');
   if (!member || !(await member.verifyPassword(password))) {
-    return {
-      success: false,
-      status: 401,
-      message: 'Invalid email or password',
-    };
     throw new AppError('Invalid email or password', 401);
   }
 
   return {
-    success: true,
-    status: 202,
-    message: 'Login Successful',
     token: signToken({ _id: member._id, role: 'member' }),
     member: toPublicMember(member),
   };

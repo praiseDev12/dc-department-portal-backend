@@ -49,13 +49,30 @@ const memberSchema = new mongoose.Schema(
       default: 'active',
       index: true,
     },
+    // Every account is a Member — this is what distinguishes an ordinary
+    // member from a unit head or the department's main admin. Role
+    // changes are just updates to this field (see roleService.js) —
+    // never a separate account.
+    role: {
+      type: String,
+      enum: ['member', 'unit_admin', 'main_admin'],
+      default: 'member',
+      index: true,
+    },
     unitHistory: [unitHistorySchema],
     consentAcceptedAt: Date,
 
+    // Self-registration credentials — select: false so the hash never
+    // comes back on normal finds; loginMember explicitly opts in with
+    // .select('+password') where it's actually needed.
     password: { type: String, select: false },
   },
   { timestamps: true },
 );
+
+// Scoped to department, not global — the same email could plausibly
+// belong to a member in two different departments. sparse so
+// admin-imported members without an email yet don't collide on null.
 memberSchema.index({ department: 1, email: 1 }, { unique: true, sparse: true });
 
 memberSchema.index({

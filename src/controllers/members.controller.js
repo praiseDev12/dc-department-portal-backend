@@ -1,4 +1,5 @@
 import * as memberService from '../services/member.service.js';
+import { cloudinary } from '../middleware/upload.js';
 
 export async function getMembers(req, res) {
   try {
@@ -122,5 +123,40 @@ export async function deleteMember(req, res) {
     res.status(status).json({
       message: error.message || 'Failed to delete member',
     });
+  }
+}
+
+function uploadBufferToCloudinary(buffer, folder = 'member-photos') {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: 'image' },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      },
+    );
+    stream.end(buffer);
+  });
+}
+
+export async function uploadMemberPhoto(req, res) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const result = await uploadBufferToCloudinary(req.file.buffer);
+
+    const member = await memberService.updateMember(req.params.id, req.user, {
+      photoUrl: result.secure_url,
+    });
+
+    res.status(200).json({ message: 'Photo uploaded successfully', member });
+  } catch (error) {
+    console.error('uploadMemberPhoto error:', error);
+    const status = error.message === 'Member not found' ? 404 : 500;
+    res
+      .status(status)
+      .json({ message: error.message || 'Failed to upload photo' });
   }
 }

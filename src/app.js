@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url';
 import { env } from './config/env.js';
 import { authRouter } from './routes/auth.routes.js';
 import { departmentRouter } from './routes/department.routes.js';
-import { memberRouter } from './routes/member.routes.js';
+import { memberRouter } from './routes/members.routes.js';
 import { serviceRouter } from './routes/service.routes.js';
 import { contributionRouter } from './routes/contribution.routes.js';
 import { dashboardRouter } from './routes/dashboard.routes.js';
@@ -19,6 +19,7 @@ import { memberAuthRouter } from './routes/memberAuth.route.js';
 import { publicRouter } from './routes/public.route.js';
 import { unitAdminRouter } from './routes/unitAdmin.route.js';
 import { unitRouter } from './routes/unit.route.js';
+import { roleRouter } from './routes/role.route.js';
 
 export const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -43,6 +44,8 @@ app.use('/api/member-auth', memberAuthRouter);
 app.use('/api/public', publicRouter);
 app.use('/api/unit-admin-auth', unitAdminRouter);
 app.use('/api/units', unitRouter);
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+app.use('/api/roles', roleRouter);
 
 app.use(express.static(clientDist));
 app.get('*', (req, res, next) => {

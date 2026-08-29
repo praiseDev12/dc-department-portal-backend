@@ -22,21 +22,11 @@ export async function registerUnitAdmin({
   // either one, only attach a new unit_admin to something that's already there.
   const departmentDoc = await Department.findById(department);
   if (!departmentDoc) {
-    return {
-      success: false,
-      status: 404,
-      message: 'Selected department was not found',
-    };
     throw new AppError('Selected department was not found', 404);
   }
 
   const unitDoc = await Unit.findOne({ _id: unit, department });
   if (!unitDoc) {
-    return {
-      success: false,
-      status: 404,
-      message: 'Selecte unit does not belong to that department',
-    };
     throw new AppError('Selected unit does not belong to that department', 404);
   }
 
@@ -45,11 +35,6 @@ export async function registerUnitAdmin({
     role: 'unit_admin',
   });
   if (currentHeadCount >= MAX_UNIT_HEADS) {
-    return {
-      success: false,
-      status: 409,
-      message: 'This unit already has the maximum number of heads',
-    };
     throw new AppError(
       'This unit already has the maximum of two unit heads',
       409,
@@ -58,11 +43,6 @@ export async function registerUnitAdmin({
 
   const existing = await User.findOne({ email: email.toLowerCase() });
   if (existing) {
-    return {
-      success: false,
-      status: 409,
-      message: 'An account with this email already exists',
-    };
     throw new AppError('An account with this email already exists', 409);
   }
 
@@ -77,9 +57,6 @@ export async function registerUnitAdmin({
   await user.save();
 
   return {
-    success: true,
-    status: 201,
-    message: 'Created Successfully',
     token: signToken(user),
     user: {
       id: user._id,

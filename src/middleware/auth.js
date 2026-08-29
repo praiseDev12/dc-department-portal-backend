@@ -1,14 +1,19 @@
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
-import { User } from '../models/User.js';
+import { Member } from '../models/Member.js';
 import { AppError } from '../utils/errors.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 export function signToken(user) {
   return jwt.sign(
-    { sub: user._id, department: user.department, unit: user.unit, role: user.role },
+    {
+      sub: user._id,
+      department: user.department,
+      unit: user.unit,
+      role: user.role,
+    },
     env.jwtSecret,
-    { expiresIn: env.jwtExpiresIn }
+    { expiresIn: env.jwtExpiresIn },
   );
 }
 
@@ -18,10 +23,11 @@ export const requireAuth = asyncHandler(async (req, _res, next) => {
   if (!token) throw new AppError('Authentication required', 401);
 
   const payload = jwt.verify(token, env.jwtSecret);
-  const user = await User.findById(payload.sub).select('-passwordHash');
-  if (!user || !user.active) throw new AppError('Authentication required', 401);
+  const member = await Member.findById(payload.sub).select('-password');
+  if (!member || member.status !== 'active')
+    throw new AppError('Authentication required', 401);
 
-  req.user = user;
+  req.user = member;
   next();
 });
 

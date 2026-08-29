@@ -30,10 +30,9 @@ export async function getUnits({ user }) {
       },
     },
 
-    // Get unit administrators through User.unit
     {
       $lookup: {
-        from: 'users',
+        from: 'members',
         let: {
           unitId: '$_id',
           departmentId: '$department',
@@ -52,10 +51,10 @@ export async function getUnits({ user }) {
           },
           {
             $project: {
-              name: 1,
+              fullName: 1,
               email: 1,
               role: 1,
-              active: 1,
+              status: 1,
             },
           },
         ],
@@ -89,6 +88,7 @@ export async function getUnits({ user }) {
 
   return units;
 }
+
 export async function createUnit({ user, name: { name } }) {
   ensureMainAdmin(user);
 

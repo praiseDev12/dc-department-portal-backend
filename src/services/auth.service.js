@@ -1,35 +1,54 @@
 import { Department } from '../models/Department.js';
 import { Unit } from '../models/Unit.js';
-import { User } from '../models/User.js';
+import { Member } from '../models/Member.js';
 import { signToken } from '../middleware/auth.js';
-import { AppError } from '../utils/errors.js';
 import { escapeRegex } from '../utils/regex.js';
-import { success } from 'zod/v4';
 
+function toPublicMember(member) {
+  return {
+    id: member._id,
+    fullName: member.fullName,
+    email: member.email,
+    role: member.role,
+    photoUrl: member.photoUrl,
+    department: member.department,
+    unit: member.unit,
+  };
+}
+
+// Creates a brand-new department, its first unit, and its founding
+// main_admin — who is a full Member record, not a stripped-down admin
+// account. Gated by DEPARTMENT_SETUP_CODE so this can't be reached by
+// just anyone who finds the page.
 export async function onboardDepartment({
   departmentName,
   unitName,
-  adminName,
+  fullName,
+  dateOfBirth,
+  gender,
+  maritalStatus,
+  phoneNumber,
+  whatsappNumber,
   email,
+  address,
+  occupation,
   password,
   setupCode,
 }) {
   if (!setupCode || setupCode !== process.env.DEPARTMENT_SETUP_CODE) {
-    throw new AppError('Invalid setup code', 403);
+    return { success: false, status: 403, message: 'Invalid setup code' };
   }
 
   const trimmedName = departmentName.trim();
-
-  const existing = await Department.findOne({
+  const existingDept = await Department.findOne({
     name: { $regex: new RegExp(`^${escapeRegex(trimmedName)}$`, 'i') },
   });
-  if (existing) {
+  if (existingDept) {
     return {
       success: false,
-      status: 403,
+      status: 409,
       message: 'A department with this name already exists',
     };
-    throw new AppError('A department with this name already exists', 409);
   }
 
   const department = await Department.create({ name: trimmedName });
@@ -38,52 +57,135 @@ export async function onboardDepartment({
     name: unitName || 'General',
   });
 
-  const user = new User({
+  const member = new Member({
     department: department._id,
-    name: adminName,
+    unit: unit._id,
+    fullName,
+    dateOfBirth,
+    gender,
+    maritalStatus,
+    phoneNumber,
+    whatsappNumber,
     email,
+    address,
+    occupation,
+    roleInUnit: 'Head of Department',
     role: 'main_admin',
+    dateJoinedDepartment: new Date(),
   });
-  await user.setPassword(password);
-  await user.save();
+  await member.setPassword(password);
+  await member.save();
 
   return {
     success: true,
     status: 201,
-    message: 'Created Successfully',
-    token: signToken(user),
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      department: user.department,
-    },
+    message: 'Department, unit, and admin account created successfully',
+    token: signToken(member),
+    user: toPublicMember(member),
     department,
     unit,
   };
 }
 
-export async function loginUser({ email, password }) {
-  const user = await User.findOne({ email, active: true });
-  if (!user || !(await user.verifyPassword(password))) {
+// Universal self-registration — used by everyone. Role always starts as
+// 'member'; becoming a unit head or main admin later is a role change on
+// this same record (see roleService.js), never a separate account.
+export async function register({
+  department,
+  unit,
+  fullName,
+  dateOfBirth,
+  gender,
+  maritalStatus,
+  phoneNumber,
+  whatsappNumber,
+  email,
+  address,
+  occupation,
+  roleInUnit,
+  password,
+  consentAccepted,
+}) {
+  const departmentDoc = await Department.findById(department);
+  if (!departmentDoc) {
+    return {
+      success: false,
+      status: 404,
+      message: 'The selected department was not found',
+    };
+  }
+
+  const unitDoc = await Unit.findOne({ _id: unit, department });
+  if (!unitDoc) {
+    return {
+      success: false,
+      status: 404,
+      message: 'Selected unit does not belong to that department',
+    };
+  }
+
+  const existing = await Member.findOne({
+    department,
+    email: email.toLowerCase(),
+  });
+  if (existing) {
+    return {
+      success: false,
+      status: 409,
+      message: 'A member with this email already exists in this department',
+    };
+  }
+
+  const member = new Member({
+    department,
+    unit,
+    fullName,
+    dateOfBirth,
+    gender,
+    maritalStatus,
+    phoneNumber,
+    whatsappNumber,
+    email,
+    address,
+    occupation,
+    roleInUnit,
+    role: 'member',
+    dateJoinedDepartment: new Date(),
+    consentAcceptedAt: consentAccepted ? new Date() : undefined,
+  });
+  await member.setPassword(password);
+  await member.save();
+
+  return {
+    success: true,
+    status: 201,
+    message: 'Registered successfully',
+    token: signToken(member),
+    user: toPublicMember(member),
+  };
+}
+
+// One login for every role — the token carries whatever role the
+// Member currently has, so a promotion/demotion takes effect the next
+// time they log in (or immediately, if you re-issue a token on change).
+export async function login({ email, password }) {
+  const member = await Member.findOne({
+    email: email.toLowerCase(),
+    status: 'active',
+  }).select('+password');
+  if (!member || !(await member.verifyPassword(password))) {
     return {
       success: false,
       status: 401,
       message: 'Invalid email or password',
     };
-    throw new AppError('Invalid email or password', 401);
   }
 
   return {
-    token: signToken(user),
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      department: user.department,
-      unit: user.unit,
-    },
+    success: true,
+    status: 200,
+    message: 'Login successful',
+    token: signToken(member),
+    user: toPublicMember(member),
   };
 }
