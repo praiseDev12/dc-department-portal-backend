@@ -8,6 +8,8 @@ import {
   changeMemberUnit,
   deleteMember,
   uploadMemberPhoto,
+  updateOwnProfile,
+  getOwnProfile,
 } from '../controllers/members.controller.js';
 
 import upload from '../middleware/upload.js';
@@ -17,6 +19,9 @@ import { requireAuth } from '../middleware/auth.js';
 export const memberRouter = express.Router();
 
 memberRouter.use(requireAuth);
+memberRouter.get('/me', getOwnProfile);
+memberRouter.patch('/me', updateOwnProfile);
+
 memberRouter.get('/', getMembers);
 memberRouter.get('/:id', getMember);
 memberRouter.patch('/:id', updateMember);

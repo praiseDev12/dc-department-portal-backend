@@ -92,8 +92,6 @@ export async function getUnits({ user }) {
 export async function createUnit({ user, name: { name } }) {
   ensureMainAdmin(user);
 
-  console.log('Name:', name);
-
   if (typeof name !== 'string') {
     throw new Error('Unit name must be a string');
   }
@@ -116,12 +114,9 @@ export async function createUnit({ user, name: { name } }) {
   const unit = await Unit.create({
     department: user.department,
     name: trimmedName,
-    adminUsers: [],
   });
 
-  return Unit.findById(unit._id)
-    .populate('adminUsers', 'name email role')
-    .lean();
+  return Unit.findById(unit._id).lean();
 }
 
 export async function updateUnit({ user, unitId, name: { name } }) {
@@ -164,9 +159,7 @@ export async function updateUnit({ user, unitId, name: { name } }) {
 
   await unit.save();
 
-  return Unit.findById(unit._id)
-    .populate('adminUsers', 'name email role')
-    .lean();
+  return Unit.findById(unit._id).lean();
 }
 
 export async function deleteUnit({ user, unitId, setupCode }) {

@@ -16,10 +16,6 @@ function toPublicMember(member) {
   };
 }
 
-// Creates a brand-new department, its first unit, and its founding
-// main_admin — who is a full Member record, not a stripped-down admin
-// account. Gated by DEPARTMENT_SETUP_CODE so this can't be reached by
-// just anyone who finds the page.
 export async function onboardDepartment({
   departmentName,
   unitName,
@@ -87,9 +83,6 @@ export async function onboardDepartment({
   };
 }
 
-// Universal self-registration — used by everyone. Role always starts as
-// 'member'; becoming a unit head or main admin later is a role change on
-// this same record (see roleService.js), never a separate account.
 export async function register({
   department,
   unit,
@@ -165,9 +158,6 @@ export async function register({
   };
 }
 
-// One login for every role — the token carries whatever role the
-// Member currently has, so a promotion/demotion takes effect the next
-// time they log in (or immediately, if you re-issue a token on change).
 export async function login({ email, password }) {
   const member = await Member.findOne({
     email: email.toLowerCase(),

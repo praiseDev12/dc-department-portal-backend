@@ -5,7 +5,7 @@ const unitHistorySchema = new mongoose.Schema(
   {
     unit: { type: mongoose.Schema.Types.ObjectId, ref: 'Unit', required: true },
     movedAt: { type: Date, default: Date.now },
-    movedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    movedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' },
     note: String,
   },
   { _id: false },

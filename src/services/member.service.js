@@ -231,3 +231,53 @@ export async function deleteMember(memberId, user) {
 
   return member;
 }
+
+const SELF_EDITABLE_FIELDS = [
+  'fullName',
+  'dateOfBirth',
+  'gender',
+  'maritalStatus',
+  'phoneNumber',
+  'whatsappNumber',
+  'email',
+  'address',
+  'occupation',
+  // Deliberately excludes: roleInUnit, dateJoinedDepartment, status, role,
+  // unit, department, photoUrl (photoUrl already goes through the
+  // dedicated /members/:id/photo upload endpoint) — those stay admin-only.
+];
+
+export async function updateOwnProfile(user, updates) {
+  const filteredUpdates = {};
+  for (const field of SELF_EDITABLE_FIELDS) {
+    if (updates[field] !== undefined) {
+      filteredUpdates[field] = updates[field];
+    }
+  }
+
+  const member = await Member.findByIdAndUpdate(
+    user._id,
+    { $set: filteredUpdates },
+    { new: true, runValidators: true },
+  )
+    .populate('department', 'name')
+    .populate('unit', 'name');
+
+  if (!member) {
+    throw new Error('Member not found');
+  }
+
+  return member;
+}
+
+export async function getOwnProfile(user) {
+  const member = await Member.findById(user._id)
+    .populate('department', 'name')
+    .populate('unit', 'name');
+
+  if (!member) {
+    throw new Error('Member not found');
+  }
+
+  return member;
+}

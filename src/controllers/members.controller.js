@@ -160,3 +160,27 @@ export async function uploadMemberPhoto(req, res) {
       .json({ message: error.message || 'Failed to upload photo' });
   }
 }
+
+export async function updateOwnProfile(req, res) {
+  try {
+    const member = await memberService.updateOwnProfile(req.user, req.body);
+    res.status(200).json({ message: 'Profile updated successfully', member });
+  } catch (error) {
+    console.error('updateOwnProfile error:', error);
+    res
+      .status(400)
+      .json({ message: error.message || 'Failed to update profile' });
+  }
+}
+
+export async function getOwnProfile(req, res) {
+  try {
+    const member = await memberService.getOwnProfile(req.user);
+    res.status(200).json({ member });
+  } catch (error) {
+    console.error('getOwnProfile error:', error);
+    res
+      .status(404)
+      .json({ message: error.message || 'Failed to load profile' });
+  }
+}
