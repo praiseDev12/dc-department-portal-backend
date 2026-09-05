@@ -12,6 +12,7 @@ import {
   checkIn,
   getMyAttendance,
   getLastServiceAttendance,
+  activateService,
 } from '../controllers/checkIn.controller.js';
 
 export const checkInRouter = express.Router();
@@ -33,6 +34,12 @@ checkInRouter.delete(
   '/services/:serviceId',
   requireRole('main_admin'),
   deleteService,
+);
+
+checkInRouter.patch(
+  '/services/:serviceId/activate',
+  requireRole('main_admin'),
+  activateService,
 );
 
 // Today's generated sessions

@@ -26,7 +26,6 @@ export async function getServices({ user }) {
 
   return Service.find({
     department: user.department,
-    active: true,
   })
     .sort({ dayOfWeek: 1, startTime: 1 })
     .lean();
@@ -145,13 +144,7 @@ export async function updateService({
 }
 
 export async function deleteService({ user, serviceId }) {
-  ensureDepartment(user);
-
-  if (user.role !== 'main_admin') {
-    throw new AppError('Only main admins can delete services', 403);
-  }
-
-  const service = await Service.findOneAndDelete({
+  const service = await Service.findOne({
     _id: serviceId,
     department: user.department,
   });
@@ -159,6 +152,37 @@ export async function deleteService({ user, serviceId }) {
   if (!service) {
     throw new AppError('Service not found', 404);
   }
+
+  if (!service.active) {
+    throw new AppError('Service is already inactive', 400);
+  }
+
+  service.active = false;
+
+  await service.save();
+
+  return service;
+}
+
+export async function activateService({ user, serviceId }) {
+  const service = await Service.findOne({
+    _id: serviceId,
+    department: user.department,
+  });
+
+  console.log(serviceId, user.department);
+
+  if (!service) {
+    throw new AppError('Service not found', 404);
+  }
+
+  if (service.active) {
+    throw new AppError('Service is already active', 400);
+  }
+
+  service.active = true;
+
+  await service.save();
 
   return service;
 }
@@ -232,13 +256,18 @@ export async function getTodaySessions({ user }) {
 
   const today = getLagosDateParts();
 
-  return CheckInSession.find({
+  const sessions = await CheckInSession.find({
     department: user.department,
     serviceDate: today.dateString,
   })
-    .populate('service', 'name dayOfWeek startTime')
+    .populate({
+      path: 'service',
+      select: 'name dayOfWeek startTime active',
+    })
     .sort({ scheduledStart: 1 })
     .lean();
+
+  return sessions.filter((session) => session.service?.active);
 }
 
 export async function checkIn({ user, code }) {
