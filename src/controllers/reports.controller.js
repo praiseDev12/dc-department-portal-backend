@@ -13,7 +13,7 @@ export const generateReport = asyncHandler(async (req, res) => {
       statistics,
     } = req.query;
 
-    const allowedTypes = ['attendance', 'contributions', 'members'];
+    const allowedTypes = ['attendance', 'contributions', 'members', 'general'];
 
     if (!allowedTypes.includes(type)) {
       return res.status(400).json({

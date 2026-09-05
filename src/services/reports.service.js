@@ -5,6 +5,7 @@ import { Department } from '../models/Department.js';
 import { buildAttendanceReport } from './reports/attendance.report.js';
 import { buildContributionReport } from './reports/contributions.report.js';
 import { buildMembersReport } from './reports/members.report.js';
+import { buildGeneralReport } from './reports/general.report.js';
 
 import { drawHeader, drawFooter } from '../utils/pdf.js';
 
@@ -100,6 +101,16 @@ export async function buildDepartmentReport({
           unit,
           memberReportOptions,
           startNewPage,
+        });
+        break;
+
+      case 'general':
+        await buildGeneralReport({
+          doc,
+          department,
+          departmentName,
+          from,
+          to,
         });
         break;
 

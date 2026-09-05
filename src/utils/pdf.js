@@ -127,13 +127,36 @@ export function drawSummaryCard(doc, x, y, width, height, label, value) {
     .fillColor(MUTED_COLOR)
     .font('Helvetica-Bold')
     .fontSize(8)
-    .text(label.toUpperCase(), x + 16, y + 12);
+    .text(label.toUpperCase(), x + 16, y + 12, {
+      width: width - 24,
+      lineBreak: false,
+    });
+
+  const valueText = String(value);
+
+  let valueFontSize = 20;
+
+  if (valueText.length > 12) {
+    valueFontSize = 16;
+  }
+
+  if (valueText.length > 16) {
+    valueFontSize = 14;
+  }
+
+  if (valueText.length > 20) {
+    valueFontSize = 12;
+  }
 
   doc
     .fillColor(DARK_COLOR)
     .font('Helvetica-Bold')
-    .fontSize(20)
-    .text(String(value), x + 16, y + 27);
+    .fontSize(valueFontSize)
+    .text(valueText, x + 16, y + 27, {
+      width: width - 28,
+      lineBreak: false,
+      ellipsis: true,
+    });
 }
 
 export function drawSectionTitle(doc, title, y) {
