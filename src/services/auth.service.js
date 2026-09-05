@@ -11,7 +11,14 @@ function toPublicMember(member) {
     email: member.email,
     role: member.role,
     photoUrl: member.photoUrl,
-    department: member.department,
+
+    department: member.department
+      ? {
+          id: member.department._id,
+          name: member.department.name,
+        }
+      : null,
+
     unit: member.unit,
   };
 }
