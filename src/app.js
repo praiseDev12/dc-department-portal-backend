@@ -17,7 +17,6 @@ import { reportsRouter } from './routes/report.routes.js';
 import { AppError } from './utils/errors.js';
 // import { memberAuthRouter } from './routes/memberAuth.route.js';
 import { publicRouter } from './routes/public.route.js';
-import { unitAdminRouter } from './routes/unitAdmin.route.js';
 import { unitRouter } from './routes/unit.route.js';
 import { roleRouter } from './routes/role.route.js';
 import { checkInRouter } from './routes/checkIn.route.js';
