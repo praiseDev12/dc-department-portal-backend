@@ -156,6 +156,8 @@ export async function register({
   await member.setPassword(password);
   await member.save();
 
+  await member.populate('department', 'name');
+
   return {
     success: true,
     status: 201,
