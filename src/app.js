@@ -21,6 +21,7 @@ import { unitAdminRouter } from './routes/unitAdmin.route.js';
 import { unitRouter } from './routes/unit.route.js';
 import { roleRouter } from './routes/role.route.js';
 import { checkInRouter } from './routes/checkIn.route.js';
+import { contributionRouter } from './routes/contribution.routes.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -41,7 +42,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/members', memberRouter);
 // app.use('/api/services', serviceRouter);
 app.use('/api/check-in', checkInRouter);
-// app.use('/api/contributions', contributionRouter);
+app.use('/api/contributions', contributionRouter);
 app.use('/api/dashboard', dashboardRouter);
 // app.use('/api/reports', reportRouter);
 // app.use('/api/notifications', notificationRouter);

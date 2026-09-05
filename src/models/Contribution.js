@@ -8,41 +8,25 @@ const contributionSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    unit: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Unit',
+
+    title: {
+      type: String,
       required: true,
-      index: true,
+      trim: true,
     },
-    member: {
+
+    createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Member',
       required: true,
-      index: true,
-    },
-    period: { type: String, required: true },
-    amountExpected: { type: Number, required: true, min: 0 },
-    interval: {
-      type: String,
-      enum: ['monthly', 'quarterly', 'yearly'],
-      default: 'monthly',
-    },
-    amountPaid: { type: Number, default: 0, min: 0 },
-    datePaid: Date,
-    status: {
-      type: String,
-      enum: ['paid', 'overdue', 'partial'],
-      default: 'overdue',
-      index: true,
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  },
 );
 
-contributionSchema.index(
-  { department: 1, member: 1, period: 1 },
-  { unique: true },
-);
+contributionSchema.index({ department: 1, createdAt: -1 });
 
 export const Contribution =
   mongoose.models.Contribution ||
