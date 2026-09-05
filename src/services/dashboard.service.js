@@ -3,7 +3,8 @@ import { CheckInSession } from '../models/CheckInSession.js';
 import { Attendance } from '../models/Attendance.js';
 
 export async function getDashboardSummary({ role, departmentId, unitId }) {
-  // main_admin sees the whole department; unit_admin sees only their unit.
+  // main_admin sees the whole department;
+  // unit_admin sees only their unit.
   const memberFilter =
     role === 'main_admin' ? { department: departmentId } : { unit: unitId };
 
@@ -12,12 +13,13 @@ export async function getDashboardSummary({ role, departmentId, unitId }) {
     status: 'active',
   });
 
-  // The most recently generated service occurrence for this department,
-  // regardless of which named Service it belongs to — "whatever last
-  // happened," not a specific recurring service.
+  // Find the most recently scheduled service occurrence
+  // for the department.
   const lastSession = await CheckInSession.findOne({
     department: departmentId,
-  }).sort({ scheduledStart: -1 });
+  })
+    .populate('service', 'name')
+    .sort({ scheduledStart: -1 });
 
   let presentLastService = null;
   let lateLastService = null;
@@ -27,19 +29,23 @@ export async function getDashboardSummary({ role, departmentId, unitId }) {
     const attendanceFilter =
       role === 'main_admin'
         ? { session: lastSession._id }
-        : { session: lastSession._id, unit: unitId };
+        : {
+            session: lastSession._id,
+            unit: unitId,
+          };
 
-    // "Present" = checked in at all (on-time + late combined).
-    // "Late" = the subset of those who were late.
+    // Present = checked in at all.
+    // Late = the subset of present members who checked in late.
     const [totalPresent, lateCount] = await Promise.all([
       Attendance.countDocuments(attendanceFilter),
-      Attendance.countDocuments({ ...attendanceFilter, status: 'late' }),
+      Attendance.countDocuments({
+        ...attendanceFilter,
+        status: 'late',
+      }),
     ]);
 
     presentLastService = totalPresent;
     lateLastService = lateCount;
-    // Everyone eligible, minus everyone who has an Attendance record for
-    // this session — a plain set difference, not a separate query.
     absentLastService = totalMembers - totalPresent;
   }
 
@@ -48,7 +54,7 @@ export async function getDashboardSummary({ role, departmentId, unitId }) {
     presentLastService,
     lateLastService,
     absentLastService,
-    // Still null — depends on the Contribution model, which doesn't exist yet.
-    contributionsOverdue: null,
+    lastServiceName: lastSession?.service?.name ?? null,
+    lastServiceDate: lastSession?.scheduledStart ?? null,
   };
 }
