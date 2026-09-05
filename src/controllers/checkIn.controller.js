@@ -86,3 +86,11 @@ export const getMyAttendance = asyncHandler(async (req, res) => {
 
   res.json({ attendance });
 });
+
+export const getLastServiceAttendance = asyncHandler(async (req, res) => {
+  const breakdown = await checkInService.getLastServiceAttendance({
+    user: req.user,
+  });
+
+  res.json(breakdown);
+});

@@ -11,6 +11,7 @@ import {
   getTodaySessions,
   checkIn,
   getMyAttendance,
+  getLastServiceAttendance,
 } from '../controllers/checkIn.controller.js';
 
 export const checkInRouter = express.Router();
@@ -45,3 +46,9 @@ checkInRouter.post('/check-in', checkIn);
 
 // Member attendance history
 checkInRouter.get('/my-attendance', getMyAttendance);
+
+checkInRouter.get(
+  '/last-service',
+  requireRole('main_admin', 'unit_admin'),
+  getLastServiceAttendance,
+);

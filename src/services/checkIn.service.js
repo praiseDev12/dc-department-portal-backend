@@ -283,6 +283,7 @@ export async function checkIn({ user, code }) {
 
     return attendance;
   } catch (error) {
+    console.log(error);
     if (error.code === 11000) {
       throw new AppError('You have already checked in for this service', 409);
     }
@@ -302,4 +303,79 @@ export async function getMyAttendance({ user }) {
     .populate('unit', 'name')
     .sort({ checkedInAt: -1 })
     .lean();
+}
+
+export async function getLastServiceAttendance({ user }) {
+  ensureDepartment(user);
+
+  const lastSession = await CheckInSession.findOne({
+    department: user.department,
+  })
+    .sort({ scheduledStart: -1 })
+    .populate('service', 'name');
+
+  if (!lastSession) {
+    return { session: null, onTime: [], late: [], absent: [] };
+  }
+
+  const attendanceFilter =
+    user.role === 'main_admin'
+      ? { session: lastSession._id }
+      : { session: lastSession._id, unit: user.unit };
+
+  const records = await Attendance.find(attendanceFilter)
+    .populate('member', 'fullName phoneNumber photoUrl')
+    .populate('unit', 'name')
+    .lean();
+
+  const onTime = [];
+  const late = [];
+  const presentMemberIds = new Set();
+
+  for (const record of records) {
+    if (!record.member) continue;
+    presentMemberIds.add(record.member._id.toString());
+
+    const entry = {
+      id: record.member._id,
+      fullName: record.member.fullName,
+      phoneNumber: record.member.phoneNumber,
+      photoUrl: record.member.photoUrl,
+      unit: record.unit?.name,
+      checkedInAt: record.checkedInAt,
+    };
+
+    (record.status === 'late' ? late : onTime).push(entry);
+  }
+
+  const memberFilter =
+    user.role === 'main_admin'
+      ? { department: user.department }
+      : { unit: user.unit };
+
+  const allMembers = await Member.find({ ...memberFilter, status: 'active' })
+    .select('fullName phoneNumber photoUrl unit')
+    .populate('unit', 'name')
+    .lean();
+
+  const absent = allMembers
+    .filter((m) => !presentMemberIds.has(m._id.toString()))
+    .map((m) => ({
+      id: m._id,
+      fullName: m.fullName,
+      phoneNumber: m.phoneNumber,
+      photoUrl: m.photoUrl,
+      unit: m.unit?.name,
+    }));
+
+  return {
+    session: {
+      id: lastSession._id,
+      serviceName: lastSession.service?.name,
+      scheduledStart: lastSession.scheduledStart,
+    },
+    onTime,
+    late,
+    absent,
+  };
 }

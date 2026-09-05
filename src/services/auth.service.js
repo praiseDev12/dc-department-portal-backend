@@ -162,7 +162,9 @@ export async function login({ email, password }) {
   const member = await Member.findOne({
     email: email.toLowerCase(),
     status: 'active',
-  }).select('+password');
+  })
+    .select('+password')
+    .populate('department', 'name');
   if (!member || !(await member.verifyPassword(password))) {
     return {
       success: false,
