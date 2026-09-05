@@ -35,24 +35,10 @@ app.get('/', (req, res) => {
 });
 app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, limit: 80 }));
 
-app.get('/api/health', async (_req, res) => {
-  try {
-    const mongoose = await import('mongoose');
-
-    const state = mongoose.default.connection.readyState;
-
-    res.json({
-      ok: true,
-      database: state === 1 ? 'connected' : `not connected (state: ${state})`,
-    });
-  } catch (error) {
-    res.status(500).json({
-      ok: false,
-      database: 'error',
-      message: error.message,
-    });
-  }
+app.get('/api/health', (_req, res) => {
+  res.json({ ok: true });
 });
+
 app.use('/api/auth', authRouter);
 // app.use('/api/departments', departmentRouter);
 app.use('/api/members', memberRouter);
