@@ -3,6 +3,8 @@ import {
   onboardDepartment,
   register,
   login,
+  forgotPassword,
+  resetPassword,
 } from '../services/auth.service.js';
 
 export const onboard = asyncHandler(async (req, res) => {
@@ -40,3 +42,63 @@ export const loginHandler = asyncHandler(async (req, res) => {
       .json({ message: error.message || 'Failed to log in' });
   }
 });
+
+export async function forgotPasswordController(req, res) {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        message: 'Email is required',
+      });
+    }
+
+    const result = await forgotPassword({
+      email,
+    });
+
+    return res.status(result.status).json({
+      message: result.message,
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+
+    return res.status(500).json({
+      message: 'Unable to process password reset request',
+    });
+  }
+}
+
+export async function resetPasswordController(req, res) {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        message: 'Reset token is required',
+      });
+    }
+
+    if (!password) {
+      return res.status(400).json({
+        message: 'Password is required',
+      });
+    }
+
+    const result = await resetPassword({
+      token,
+      password,
+    });
+
+    return res.status(result.status).json({
+      message: result.message,
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+
+    return res.status(500).json({
+      message: 'Unable to reset password',
+    });
+  }
+}

@@ -1,8 +1,11 @@
+import crypto from 'crypto';
 import { Department } from '../models/Department.js';
 import { Unit } from '../models/Unit.js';
 import { Member } from '../models/Member.js';
 import { signToken } from '../middleware/auth.js';
 import { escapeRegex } from '../utils/regex.js';
+import { sendPasswordResetEmail } from '../utils/email.js';
+import { env } from '../config/env.js';
 
 function toPublicMember(member) {
   return {
@@ -188,5 +191,78 @@ export async function login({ email, password }) {
     message: 'Login successful',
     token: signToken(member),
     user: toPublicMember(member),
+  };
+}
+
+export async function forgotPassword({ email }) {
+  const member = await Member.findOne({
+    email: email.toLowerCase(),
+  });
+
+  // Don't reveal whether the email exists
+  if (!member) {
+    return {
+      success: true,
+      status: 200,
+      message:
+        'If an account with that email exists, a password reset link has been sent',
+    };
+  }
+
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  member.resetPasswordToken = hashedToken;
+  member.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+  await member.save();
+
+  const resetUrl = `${env.clientOrigin}/reset-password/${resetToken}`;
+
+  await sendPasswordResetEmail({
+    email: member.email,
+    resetUrl,
+  });
+
+  return {
+    success: true,
+    status: 200,
+    message:
+      'If an account with that email exists, a password reset link has been sent',
+  };
+}
+
+export async function resetPassword({ token, password }) {
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  const member = await Member.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpires: { $gt: new Date() },
+  }).select('+password');
+
+  if (!member) {
+    return {
+      success: false,
+      status: 400,
+      message: 'Invalid or expired password reset link',
+    };
+  }
+
+  await member.setPassword(password);
+
+  // Make the token single-use
+  member.resetPasswordToken = null;
+  member.resetPasswordExpires = null;
+
+  await member.save();
+
+  return {
+    success: true,
+    status: 200,
+    message: 'Password reset successfully',
   };
 }

@@ -66,6 +66,16 @@ const memberSchema = new mongoose.Schema(
     // comes back on normal finds; loginMember explicitly opts in with
     // .select('+password') where it's actually needed.
     password: { type: String, select: false },
+
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );
