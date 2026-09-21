@@ -2,7 +2,7 @@ import { Member } from '../models/Member.js';
 import { AppError } from '../utils/errors.js';
 
 const MAX_UNIT_HEADS = 2;
-const MAX_MAIN_ADMINS = 2;
+const MAX_MAIN_ADMINS = 3;
 
 export async function assignUnitHead(memberId, actingUser) {
   const member = await Member.findOne({
