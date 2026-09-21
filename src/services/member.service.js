@@ -14,35 +14,66 @@ function buildMemberScope(user) {
   return scope;
 }
 
-export async function getMembers({ user, search = '' }) {
+export async function getMembers({ user, search = '', page = 1, limit = 20 }) {
   const query = buildMemberScope(user);
 
   if (search.trim()) {
     const searchRegex = new RegExp(search.trim(), 'i');
+
+    const matchingUnits = await Unit.find({
+      department: user.department,
+      name: searchRegex,
+    })
+      .select('_id')
+      .lean();
+
+    const unitIds = matchingUnits.map((unit) => unit._id);
 
     query.$or = [
       { fullName: searchRegex },
       { email: searchRegex },
       { phoneNumber: searchRegex },
       { whatsappNumber: searchRegex },
+      { unit: { $in: unitIds } },
     ];
   }
 
-  const members = await Member.find(query)
-    .populate('department', 'name')
-    .populate('unit', 'name')
-    .populate({
-      path: 'unitHistory.unit',
-      select: 'name',
-    })
-    .populate({
-      path: 'unitHistory.movedBy',
-      select: 'name',
-    })
-    .sort({ fullName: 1 })
-    .lean();
+  const pageNumber = Math.max(Number(page) || 1, 1);
+  const limitNumber = Math.min(Math.max(Number(limit) || 20, 1), 100);
 
-  return members;
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const [members, totalMembers] = await Promise.all([
+    Member.find(query)
+      .populate('department', 'name')
+      .populate('unit', 'name')
+      .populate({
+        path: 'unitHistory.unit',
+        select: 'name',
+      })
+      .populate({
+        path: 'unitHistory.movedBy',
+        select: 'name',
+      })
+      .sort({ fullName: 1 })
+      .skip(skip)
+      .limit(limitNumber)
+      .lean(),
+
+    Member.countDocuments(query),
+  ]);
+
+  const totalPages = Math.ceil(totalMembers / limitNumber);
+
+  return {
+    members,
+    pagination: {
+      page: pageNumber,
+      limit: limitNumber,
+      totalMembers,
+      totalPages,
+    },
+  };
 }
 
 export async function getMemberById(memberId, user) {

@@ -3,18 +3,18 @@ import { cloudinary } from '../middleware/upload.js';
 
 export async function getMembers(req, res) {
   try {
-    const members = await memberService.getMembers({
+    const result = await memberService.getMembers({
       user: req.user,
       search: req.query.search || '',
+      page: req.query.page || 1,
+      limit: req.query.limit || 20,
     });
 
-    res.status(200).json({
-      members,
-    });
+    return res.status(200).json(result);
   } catch (error) {
     console.error('getMembers error:', error);
 
-    res.status(500).json({
+    return res.status(500).json({
       message: error.message || 'Failed to load members',
     });
   }
