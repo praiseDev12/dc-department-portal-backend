@@ -38,7 +38,7 @@ const memberSchema = new mongoose.Schema(
     photoUrl: String,
     phoneNumber: String,
     whatsappNumber: String,
-    email: { type: String, lowercase: true, trim: true },
+    email: { type: String, lowercase: true, trim: true, required: true },
     address: String,
     occupation: String,
     roleInUnit: String,

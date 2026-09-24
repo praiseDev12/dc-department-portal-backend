@@ -54,5 +54,11 @@ export const loginValidation = [
     .isEmail()
     .withMessage('Valid email is required')
     .normalizeEmail(),
+
   body('password').notEmpty().withMessage('Password is required'),
+
+  body('department')
+    .trim()
+    .notEmpty()
+    .withMessage('Please select a department'),
 ];

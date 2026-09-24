@@ -175,9 +175,10 @@ export async function register({
   };
 }
 
-export async function login({ email, password }) {
+export async function login({ email, password, department }) {
   const member = await Member.findOne({
     email: email.toLowerCase(),
+    department,
     status: 'active',
   })
     .select('+password')
