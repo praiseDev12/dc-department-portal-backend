@@ -7,6 +7,7 @@ import {
   deleteContributionEntry,
   updateContribution,
   deleteContribution,
+  getMyContributions,
 } from '../services/contribution.service.js';
 
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -92,11 +93,9 @@ export const updateContributionEntryController = asyncHandler(
       res.json(entry);
     } catch (error) {
       console.error('updateContributionEntryController error:', error);
-      res
-        .status(error.statusCode || error.status || 500)
-        .json({
-          message: error.message || 'Failed to update contribution entry',
-        });
+      res.status(error.statusCode || error.status || 500).json({
+        message: error.message || 'Failed to update contribution entry',
+      });
     }
   },
 );
@@ -116,11 +115,9 @@ export const deleteContributionEntryController = asyncHandler(
       });
     } catch (error) {
       console.error('deleteContributionEntryController error:', error);
-      res
-        .status(error.statusCode || error.status || 500)
-        .json({
-          message: error.message || 'Failed to delete contribution entry',
-        });
+      res.status(error.statusCode || error.status || 500).json({
+        message: error.message || 'Failed to delete contribution entry',
+      });
     }
   },
 );
@@ -155,5 +152,21 @@ export const deleteContributionController = asyncHandler(async (req, res) => {
     res
       .status(error.statusCode || error.status || 500)
       .json({ message: error.message || 'Failed to delete contribution' });
+  }
+});
+
+export const getMyContributionsController = asyncHandler(async (req, res) => {
+  try {
+    const contributions = await getMyContributions({
+      user: req.user,
+    });
+
+    res.json(contributions);
+  } catch (error) {
+    console.error('getMyContributionsController error:', error);
+
+    res.status(error.statusCode || error.status || 500).json({
+      message: error.message || 'Failed to load your contributions',
+    });
   }
 });

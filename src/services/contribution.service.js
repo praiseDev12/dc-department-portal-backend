@@ -310,3 +310,27 @@ export async function deleteContribution({ user, contributionId }) {
     contributionId: contribution._id,
   };
 }
+
+export async function getMyContributions({ user }) {
+  if (!user?.department) {
+    throw new AppError('Department not found', 400);
+  }
+
+  const entries = await ContributionEntry.find({
+    department: user.department,
+    member: user._id,
+  })
+    .populate('contribution', 'title createdAt')
+    .sort({ contributedAt: -1 })
+    .lean();
+
+  const totalAmount = entries.reduce(
+    (total, entry) => total + Number(entry.amount || 0),
+    0,
+  );
+
+  return {
+    entries,
+    totalAmount,
+  };
+}

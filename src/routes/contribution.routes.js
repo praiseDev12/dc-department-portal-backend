@@ -11,11 +11,19 @@ import {
   deleteContributionEntryController,
   updateContributionController,
   deleteContributionController,
+  getMyContributionsController,
 } from '../controllers/contribution.controller.js';
 
 export const contributionRouter = express.Router();
 
-contributionRouter.use(requireAuth, requireRole('main_admin'));
+// All contribution routes require authentication.
+contributionRouter.use(requireAuth);
+
+// Member-specific contribution history.
+contributionRouter.get('/my-contributions', getMyContributionsController);
+
+// Admin-only contribution management.
+contributionRouter.use(requireRole('main_admin'));
 
 contributionRouter.get('/', getContributionsController);
 

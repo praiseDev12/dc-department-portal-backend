@@ -22,7 +22,12 @@ function toPublicMember(member) {
         }
       : null,
 
-    unit: member.unit,
+    unit: member.unit
+      ? {
+          id: member.unit._id,
+          name: member.unit.name,
+        }
+      : null,
   };
 }
 
@@ -176,7 +181,9 @@ export async function login({ email, password }) {
     status: 'active',
   })
     .select('+password')
-    .populate('department', 'name');
+    .populate('department', 'name')
+    .populate('unit', 'name');
+
   if (!member || !(await member.verifyPassword(password))) {
     return {
       success: false,
