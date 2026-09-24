@@ -202,12 +202,13 @@ export async function login({ email, password, department }) {
   };
 }
 
-export async function forgotPassword({ email }) {
+export async function forgotPassword({ email, department }) {
   const member = await Member.findOne({
     email: email.toLowerCase(),
+    department,
   });
 
-  // Don't reveal whether the email exists
+  // Don't reveal whether the email exists in the selected department
   if (!member) {
     return {
       success: true,
@@ -226,7 +227,6 @@ export async function forgotPassword({ email }) {
 
   member.resetPasswordToken = hashedToken;
   member.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
-
   await member.save();
 
   const resetUrl = `${env.clientOrigin}/reset-password/${resetToken}`;

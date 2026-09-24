@@ -45,7 +45,7 @@ export const loginHandler = asyncHandler(async (req, res) => {
 
 export async function forgotPasswordController(req, res) {
   try {
-    const { email } = req.body;
+    const { email, department } = req.body;
 
     if (!email) {
       return res.status(400).json({
@@ -53,8 +53,15 @@ export async function forgotPasswordController(req, res) {
       });
     }
 
+    if (!department) {
+      return res.status(400).json({
+        message: 'Department is required',
+      });
+    }
+
     const result = await forgotPassword({
       email,
+      department,
     });
 
     return res.status(result.status).json({
