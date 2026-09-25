@@ -30,6 +30,25 @@ const announcementSchema = new mongoose.Schema(
       index: true,
     },
 
+    notificationFrequency: {
+      type: String,
+      enum: [
+        'once',
+        'every_30_seconds',
+        'daily',
+        'every_6_hours',
+        'every_12_hours',
+      ],
+      default: 'once',
+      index: true,
+    },
+
+    nextNotificationAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Member',

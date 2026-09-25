@@ -73,13 +73,20 @@ export async function sendNotificationToMember({
 
   const messaging = getMessaging();
 
+  const notificationData = Object.fromEntries(
+    Object.entries(data).map(([key, value]) => [
+      key,
+      typeof value === 'string' ? value : JSON.stringify(value),
+    ]),
+  );
+
   const response = await messaging.sendEachForMulticast({
     tokens,
-    notification: {
+    data: {
       title,
       body,
+      ...notificationData,
     },
-    data,
   });
 
   const invalidTokens = [];
@@ -106,6 +113,91 @@ export async function sendNotificationToMember({
     success: true,
     status: 200,
     message: 'Notification sent successfully',
+    successCount: response.successCount,
+    failureCount: response.failureCount,
+  };
+}
+
+export async function sendNotificationToDepartment({
+  departmentId,
+  title,
+  body,
+  data = {},
+}) {
+  const members = await Member.find({
+    department: departmentId,
+    'notificationTokens.0': {
+      $exists: true,
+    },
+  }).select('notificationTokens');
+
+  const notificationTokens = members.flatMap(
+    (member) => member.notificationTokens || [],
+  );
+
+  const tokens = notificationTokens.map((item) => item.token).filter(Boolean);
+
+  if (!tokens.length) {
+    return {
+      success: true,
+      status: 200,
+      message: 'No notification devices found',
+      successCount: 0,
+      failureCount: 0,
+    };
+  }
+
+  const notificationData = Object.fromEntries(
+    Object.entries(data).map(([key, value]) => [
+      key,
+      typeof value === 'string' ? value : JSON.stringify(value),
+    ]),
+  );
+
+  const messaging = getMessaging();
+
+  const response = await messaging.sendEachForMulticast({
+    tokens,
+    data: {
+      title,
+      body,
+      ...notificationData,
+    },
+  });
+
+  const invalidTokens = [];
+
+  response.responses.forEach((item, index) => {
+    if (
+      !item.success &&
+      (item.error?.code === 'messaging/registration-token-not-registered' ||
+        item.error?.code === 'messaging/invalid-registration-token')
+    ) {
+      invalidTokens.push(tokens[index]);
+    }
+  });
+
+  if (invalidTokens.length) {
+    await Member.updateMany(
+      {
+        department: departmentId,
+      },
+      {
+        $pull: {
+          notificationTokens: {
+            token: {
+              $in: invalidTokens,
+            },
+          },
+        },
+      },
+    );
+  }
+
+  return {
+    success: true,
+    status: 200,
+    message: 'Department notification sent successfully',
     successCount: response.successCount,
     failureCount: response.failureCount,
   };

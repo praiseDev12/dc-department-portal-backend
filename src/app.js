@@ -22,6 +22,7 @@ import { roleRouter } from './routes/role.route.js';
 import { checkInRouter } from './routes/checkIn.route.js';
 import { contributionRouter } from './routes/contribution.routes.js';
 import { notificationRouter } from './routes/notification.routes.js';
+import { announcementRouter } from './routes/announcement.routes.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -49,6 +50,7 @@ app.use('/api/contributions', contributionRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/notifications', notificationRouter);
+app.use('/api/announcements', announcementRouter);
 // app.use('/api/notifications', notificationRouter);
 // app.use('/api/member-auth', memberAuthRouter);
 app.use('/api/public', publicRouter);
