@@ -19,52 +19,84 @@ const memberSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+
     unit: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Unit',
       required: true,
       index: true,
     },
+
     fullName: { type: String, required: true, trim: true },
+
     dateOfBirth: Date,
+
     gender: {
       type: String,
       enum: ['female', 'male', 'other', 'prefer_not_to_say'],
     },
+
     maritalStatus: {
       type: String,
       enum: ['single', 'married', 'widowed', 'divorced', 'prefer_not_to_say'],
     },
+
     photoUrl: String,
+
+    notificationTokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+        platform: {
+          type: String,
+          enum: ['web', 'android'],
+          default: 'web',
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+        lastUsedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
     phoneNumber: String,
+
     whatsappNumber: String,
+
     email: { type: String, lowercase: true, trim: true, required: true },
+
     address: String,
+
     occupation: String,
+
     roleInUnit: String,
+
     dateJoinedDepartment: Date,
+
     status: {
       type: String,
       enum: ['active', 'inactive'],
       default: 'active',
       index: true,
     },
-    // Every account is a Member — this is what distinguishes an ordinary
-    // member from a unit head or the department's main admin. Role
-    // changes are just updates to this field (see roleService.js) —
-    // never a separate account.
+
     role: {
       type: String,
       enum: ['member', 'unit_admin', 'main_admin'],
       default: 'member',
       index: true,
     },
+
     unitHistory: [unitHistorySchema],
+
     consentAcceptedAt: Date,
 
-    // Self-registration credentials — select: false so the hash never
-    // comes back on normal finds; loginMember explicitly opts in with
-    // .select('+password') where it's actually needed.
     password: { type: String, select: false },
 
     resetPasswordToken: {
