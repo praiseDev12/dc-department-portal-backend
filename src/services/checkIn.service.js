@@ -11,6 +11,8 @@ import {
   addMinutes,
 } from '../utils/lagosTime.js';
 
+import { sendNotificationToDepartment } from './notification.service.js';
+
 function ensureDepartment(user) {
   if (!user?.department) {
     throw new AppError('Department not found', 400);
@@ -231,29 +233,64 @@ export async function activateService({ user, serviceId }) {
 }
 
 export async function generateCheckInCode({ user, serviceId }) {
-  ensureDepartment(user);
+  try {
+    ensureDepartment(user);
 
-  const service = await Service.findOne({
-    _id: serviceId,
-    department: user.department,
-    active: true,
-  });
+    const service = await Service.findOne({
+      _id: serviceId,
+      department: user.department,
+      active: true,
+    });
 
-  if (!service) {
-    throw new AppError('Service not found', 404);
+    if (!service) {
+      throw new AppError('Service not found', 404);
+    }
+
+    const today = getLagosDateParts();
+
+    if (today.weekday !== service.dayOfWeek) {
+      throw new AppError('This service is not scheduled for today', 400);
+    }
+
+    const session = await createTodaySession({
+      service,
+      departmentId: user.department,
+      serviceDate: today.dateString,
+    });
+
+    // Only send the notification if it has not
+    // already been sent for this service occurrence.
+    if (!session.notificationSentAt) {
+      const notificationResult = await sendNotificationToDepartment({
+        departmentId: user.department,
+        title: `${service.name} Check In is now open`,
+        body: `${service.name} check-in is now available. Get the code from your admin and check in.`,
+        data: {
+          type: 'service_check_in',
+          sessionId: session._id.toString(),
+          serviceId: service._id.toString(),
+          url: '/check-in',
+        },
+      });
+
+      console.log(
+        `Check-in notification result for "${service.name}":`,
+        notificationResult,
+      );
+
+      // Only mark the notification as sent when
+      // at least one device received it.
+      if (notificationResult.successCount > 0) {
+        session.notificationSentAt = new Date();
+        await session.save();
+      }
+    }
+
+    return session;
+  } catch (error) {
+    console.error('generateCheckInCode service error:', error);
+    throw error;
   }
-
-  const today = getLagosDateParts();
-
-  if (today.weekday !== service.dayOfWeek) {
-    throw new AppError('This service is not scheduled for today', 400);
-  }
-
-  return createTodaySession({
-    service,
-    departmentId: user.department,
-    serviceDate: today.dateString,
-  });
 }
 
 export async function getTodaySessions({ user }) {
