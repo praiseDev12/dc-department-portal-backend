@@ -168,12 +168,19 @@ export async function sendNotificationToDepartment({
   const invalidTokens = [];
 
   response.responses.forEach((item, index) => {
-    if (
-      !item.success &&
-      (item.error?.code === 'messaging/registration-token-not-registered' ||
-        item.error?.code === 'messaging/invalid-registration-token')
-    ) {
-      invalidTokens.push(tokens[index]);
+    if (!item.success) {
+      console.error('FCM notification failed:', {
+        token: tokens[index],
+        code: item.error?.code,
+        message: item.error?.message,
+      });
+
+      if (
+        item.error?.code === 'messaging/registration-token-not-registered' ||
+        item.error?.code === 'messaging/invalid-registration-token'
+      ) {
+        invalidTokens.push(tokens[index]);
+      }
     }
   });
 
@@ -195,9 +202,12 @@ export async function sendNotificationToDepartment({
   }
 
   return {
-    success: true,
-    status: 200,
-    message: 'Department notification sent successfully',
+    success: response.successCount > 0,
+    status: response.successCount > 0 ? 200 : 500,
+    message:
+      response.successCount > 0
+        ? 'Department notification sent successfully'
+        : 'Failed to deliver department notification',
     successCount: response.successCount,
     failureCount: response.failureCount,
   };

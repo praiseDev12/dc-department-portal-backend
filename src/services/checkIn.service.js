@@ -21,6 +21,49 @@ function generateCode() {
   return crypto.randomInt(100000, 1000000).toString();
 }
 
+async function createTodaySession({ service, departmentId, serviceDate }) {
+  const existing = await CheckInSession.findOne({
+    service: service._id,
+    serviceDate,
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  const scheduledStart = lagosDateTimeToUtc(serviceDate, service.startTime);
+
+  const opensAt = addMinutes(scheduledStart, -service.openBeforeMinutes);
+
+  const closesAt = addMinutes(scheduledStart, service.closeAfterMinutes);
+
+  const graceEndsAt = addMinutes(scheduledStart, service.graceMinutes);
+
+  try {
+    return await CheckInSession.create({
+      service: service._id,
+      department: departmentId,
+      serviceDate,
+      code: generateCode(),
+      scheduledStart,
+      opensAt,
+      closesAt,
+      graceEndsAt,
+      active: true,
+    });
+  } catch (error) {
+    // Another process may have created the session at the same time.
+    if (error.code === 11000) {
+      return CheckInSession.findOne({
+        service: service._id,
+        serviceDate,
+      });
+    }
+
+    throw error;
+  }
+}
+
 export async function getServices({ user }) {
   ensureDepartment(user);
 
@@ -206,49 +249,11 @@ export async function generateCheckInCode({ user, serviceId }) {
     throw new AppError('This service is not scheduled for today', 400);
   }
 
-  const existing = await CheckInSession.findOne({
-    service: service._id,
+  return createTodaySession({
+    service,
+    departmentId: user.department,
     serviceDate: today.dateString,
   });
-
-  if (existing) {
-    return existing;
-  }
-
-  const scheduledStart = lagosDateTimeToUtc(
-    today.dateString,
-    service.startTime,
-  );
-
-  const opensAt = addMinutes(scheduledStart, -service.openBeforeMinutes);
-
-  const closesAt = addMinutes(scheduledStart, service.closeAfterMinutes);
-
-  const graceEndsAt = addMinutes(scheduledStart, service.graceMinutes);
-
-  try {
-    return await CheckInSession.create({
-      service: service._id,
-      department: user.department,
-      serviceDate: today.dateString,
-      code: generateCode(),
-      scheduledStart,
-      opensAt,
-      closesAt,
-      graceEndsAt,
-      active: true,
-    });
-  } catch (error) {
-    // Another admin may have generated it at exactly the same time.
-    if (error.code === 11000) {
-      return CheckInSession.findOne({
-        service: service._id,
-        serviceDate: today.dateString,
-      });
-    }
-
-    throw error;
-  }
 }
 
 export async function getTodaySessions({ user }) {

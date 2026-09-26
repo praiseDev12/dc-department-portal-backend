@@ -47,6 +47,11 @@ const checkInSessionSchema = new mongoose.Schema(
       required: true,
     },
 
+    notificationSentAt: {
+      type: Date,
+      default: null,
+    },
+
     active: {
       type: Boolean,
       default: true,
