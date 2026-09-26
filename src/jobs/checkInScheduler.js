@@ -113,7 +113,7 @@ async function processCheckInServices() {
       const notificationResult = await sendNotificationToDepartment({
         departmentId: service.department,
         title: `${service.name} Check In is now open`,
-        body: `${service.name} Get the code from your admin and Check In`,
+        body: `${service.name} is coming up. Get the code from your admin and Check In`,
         data: {
           type: 'service_check_in',
           sessionId: session._id.toString(),

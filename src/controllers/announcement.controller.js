@@ -2,7 +2,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 
 import {
   createAnnouncement,
-  deactivateAnnouncement,
+  deleteAnnouncement,
   getAllDepartmentAnnouncements,
   getDepartmentAnnouncements,
 } from '../services/announcement.service.js';
@@ -105,7 +105,7 @@ export const deleteAnnouncementController = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await deactivateAnnouncement({
+    const result = await deleteAnnouncement({
       announcementId: id,
       departmentId: req.user.department,
     });

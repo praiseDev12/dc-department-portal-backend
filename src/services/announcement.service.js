@@ -100,3 +100,25 @@ export async function deactivateAnnouncement({ announcementId, departmentId }) {
     announcement,
   };
 }
+
+export async function deleteAnnouncement({ announcementId, departmentId }) {
+  const announcement = await Announcement.findOneAndDelete({
+    _id: announcementId,
+    department: departmentId,
+  });
+
+  if (!announcement) {
+    return {
+      success: false,
+      status: 404,
+      message: 'Announcement not found',
+    };
+  }
+
+  return {
+    success: true,
+    status: 200,
+    message: 'Announcement deleted successfully',
+    announcement,
+  };
+}
