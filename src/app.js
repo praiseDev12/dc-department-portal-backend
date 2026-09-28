@@ -28,8 +28,27 @@ const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientDist = path.resolve(__dirname, '../../client/dist');
 
+const allowedOrigins = [env.clientOrigin, env.clientOriginPreview];
+
 app.use(helmet());
-app.use(cors({ origin: env.clientOrigin, credentials: true }));
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin, such as server-to-server requests.
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
 app.get('/', (req, res) => {

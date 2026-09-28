@@ -10,6 +10,8 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET || 'dev-only-change-me',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '30d',
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  clientOriginPreview:
+    process.env.CLIENT_ORIGIN_PREVIEW || 'http://localhost:4173',
   departmentSetupCode: process.env.DEPARTMENT_SETUP_CODE,
   smtp: {
     host: process.env.SMTP_HOST,
