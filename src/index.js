@@ -3,7 +3,7 @@ import { connectDb } from './config/db.js';
 import { env } from './config/env.js';
 import './config/firebaseAdmin.js';
 import { startAnnouncementScheduler } from './jobs/announcementScheduler.js';
-import { startCheckInScheduler } from './jobs/checkInScheduler.js';
+// import { startCheckInScheduler } from './jobs/checkInScheduler.js';
 
 connectDb()
   .then(() => {
@@ -11,7 +11,7 @@ connectDb()
       console.log(`API listening on http://localhost:${env.port}`);
 
       startAnnouncementScheduler();
-      startCheckInScheduler();
+      // startCheckInScheduler();
     });
   })
   .catch((error) => {
