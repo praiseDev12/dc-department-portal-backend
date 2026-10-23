@@ -23,6 +23,8 @@ import { checkInRouter } from './routes/checkIn.route.js';
 import { contributionRouter } from './routes/contribution.routes.js';
 import { notificationRouter } from './routes/notification.routes.js';
 import { announcementRouter } from './routes/announcement.routes.js';
+import { rosterRouter } from './routes/roster.routes.js';
+import { rosterEventRouter } from './routes/rosterEvent.routes.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -76,6 +78,8 @@ app.use('/api/public', publicRouter);
 app.use('/api/units', unitRouter);
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use('/api/roles', roleRouter);
+app.use('/api/roster', rosterRouter);
+app.use('/api/roster/events', rosterEventRouter);
 
 app.use(express.static(clientDist));
 app.get('*', (req, res, next) => {
