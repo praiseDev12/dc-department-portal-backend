@@ -8,6 +8,7 @@ import {
   generateMonthlyRoster,
   getMonthlyRoster,
   getMonthlyRosterByTemplateMonth,
+  getPublishedRosters,
   getRosterTemplates,
   publishMonthlyRoster,
   removeRosterAssignment,
@@ -28,6 +29,12 @@ rosterRouter.get(
   '/templates',
   requireRole('unit_admin', 'main_admin'),
   getRosterTemplates,
+);
+
+rosterRouter.get(
+  '/published',
+  requireRole('unit_admin', 'main_admin'),
+  getPublishedRosters,
 );
 
 // Create a reusable roster template.

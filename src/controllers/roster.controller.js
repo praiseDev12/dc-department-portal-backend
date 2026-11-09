@@ -4,6 +4,7 @@ import { Member } from '../models/Member.js';
 import { Unit } from '../models/Unit.js';
 import { RosterTemplate } from '../models/RosterTemplate.js';
 import { MonthlyRoster } from '../models/MonthlyRoster.js';
+import { RosterEvent } from '../models/RosterEvent.js';
 import { generateRosterOccurrences } from '../services/rosterGenerator.service.js';
 
 export const generateMonthlyRoster = async (req, res) => {
@@ -936,6 +937,116 @@ export const deleteDraftRoster = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to delete the draft roster.',
+    });
+  }
+};
+
+export const getPublishedRosters = async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (!user?._id) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication is required.',
+      });
+    }
+
+    const member = await Member.findById(user._id).select(
+      '_id department unit role status',
+    );
+
+    if (!member || member.status !== 'active') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is not active.',
+      });
+    }
+
+    if (!['unit_admin', 'main_admin'].includes(member.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only authorised administrators can view published rosters.',
+      });
+    }
+
+    const rosters = await MonthlyRoster.find({
+      department: member.department,
+      unit: member.unit,
+      status: 'published',
+    })
+      .sort({ month: -1 })
+      .select('_id name month status publishedAt publishedBy revision');
+
+    return res.status(200).json({
+      success: true,
+      rosters,
+    });
+  } catch (error) {
+    console.error('Get published rosters error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch published rosters.',
+    });
+  }
+};
+
+export const resetRosterData = async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (!user?._id) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication is required.',
+      });
+    }
+
+    const member = await Member.findById(user._id).select(
+      '_id department unit role status',
+    );
+
+    if (!member || member.status !== 'active') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is not active.',
+      });
+    }
+
+    if (!['unit_admin', 'main_admin'].includes(member.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only authorised administrators can reset roster data.',
+      });
+    }
+
+    const filter = {
+      department: member.department,
+      unit: member.unit,
+    };
+
+    const [rostersResult, eventsResult, templatesResult] = await Promise.all([
+      MonthlyRoster.deleteMany(filter),
+      RosterEvent.deleteMany(filter),
+      RosterTemplate.deleteMany(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: 'All roster data has been reset successfully.',
+      deleted: {
+        rosters: rostersResult.deletedCount || 0,
+        events: eventsResult.deletedCount || 0,
+        templates: templatesResult.deletedCount || 0,
+      },
+    });
+  } catch (error) {
+    console.error('Reset roster data error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to reset roster data.',
     });
   }
 };
