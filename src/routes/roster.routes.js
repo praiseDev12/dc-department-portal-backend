@@ -12,6 +12,7 @@ import {
   getRosterTemplates,
   publishMonthlyRoster,
   removeRosterAssignment,
+  resetRosterData,
   updateRosterAssignment,
 } from '../controllers/roster.controller.js';
 
@@ -85,6 +86,12 @@ rosterRouter.patch(
   '/:rosterId/occurrences/:occurrenceId/assignments/:assignmentId',
   requireRole('unit_admin', 'main_admin'),
   updateRosterAssignment,
+);
+
+rosterRouter.delete(
+  '/reset',
+  requireRole('unit_admin', 'main_admin'),
+  resetRosterData,
 );
 
 rosterRouter.delete(
