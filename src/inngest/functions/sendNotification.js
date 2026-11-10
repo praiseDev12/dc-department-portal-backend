@@ -4,6 +4,7 @@ import { sendRosterAssignmentNotification } from '../../services/rosterNotificat
 export const sendRosterNotification = inngest.createFunction(
   {
     id: 'send-roster-notification',
+    retries: 3,
     triggers: {
       event: 'roster/notification.send',
     },
@@ -20,6 +21,10 @@ export const sendRosterNotification = inngest.createFunction(
     });
 
     console.log('Roster notification result:', result);
+
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to send roster notification.');
+    }
 
     return result;
   },

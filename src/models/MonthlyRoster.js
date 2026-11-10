@@ -36,13 +36,13 @@ const rosterAssignmentSchema = new mongoose.Schema(
     notificationStatus: {
       dayBefore: {
         type: String,
-        enum: ['pending', 'sent', 'failed', 'not_required'],
+        enum: ['pending', 'processing', 'sent', 'failed', 'not_required'],
         default: 'pending',
       },
 
       sameDay: {
         type: String,
-        enum: ['pending', 'sent', 'failed', 'not_required'],
+        enum: ['pending', 'processing', 'sent', 'failed', 'not_required'],
         default: 'pending',
       },
     },
@@ -53,6 +53,16 @@ const rosterAssignmentSchema = new mongoose.Schema(
     },
 
     sameDaySentAt: {
+      type: Date,
+      default: null,
+    },
+
+    dayBeforeProcessingAt: {
+      type: Date,
+      default: null,
+    },
+
+    sameDayProcessingAt: {
       type: Date,
       default: null,
     },
