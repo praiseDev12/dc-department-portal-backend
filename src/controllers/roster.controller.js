@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 
+import { inngest } from '../config/inngest.js';
 import { Member } from '../models/Member.js';
 import { Unit } from '../models/Unit.js';
 import { RosterTemplate } from '../models/RosterTemplate.js';
@@ -733,10 +734,24 @@ export const publishMonthlyRoster = async (req, res) => {
 
     roster.status = 'published';
     roster.publishedAt = new Date();
-    roster.publishedBy = member._id;
+    roster.publishedBy = user._id;
     roster.revision += 1;
 
+    roster.notificationScheduling = {
+      status: 'pending',
+      scheduledAt: null,
+      failedAt: null,
+      errorMessage: '',
+    };
+
     await roster.save();
+
+    await inngest.send({
+      name: 'roster/published',
+      data: {
+        rosterId: String(roster._id),
+      },
+    });
 
     const publishedRoster = await MonthlyRoster.findById(roster._id)
       .populate('occurrences.assignments.member', '_id fullName email')

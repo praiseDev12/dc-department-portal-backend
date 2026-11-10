@@ -206,6 +206,34 @@ const monthlyRosterSchema = new mongoose.Schema(
       default: null,
     },
 
+    notificationScheduling: {
+      status: {
+        type: String,
+        enum: ['pending', 'processing', 'scheduled', 'failed'],
+        default: 'pending',
+      },
+
+      processingStartedAt: {
+        type: Date,
+        default: null,
+      },
+
+      scheduledAt: {
+        type: Date,
+        default: null,
+      },
+
+      failedAt: {
+        type: Date,
+        default: null,
+      },
+
+      errorMessage: {
+        type: String,
+        default: '',
+      },
+    },
+
     // Incremented when an authorised edit changes the published roster.
     revision: {
       type: Number,

@@ -7,15 +7,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { env } from './config/env.js';
 import { authRouter } from './routes/auth.routes.js';
-// import { departmentRouter } from './routes/department.routes.js';
 import { memberRouter } from './routes/members.routes.js';
-// import { serviceRouter } from './routes/service.routes.js';
-// import { contributionRouter } from './routes/contribution.routes.js';
 import { dashboardRouter } from './routes/dashboard.routes.js';
 import { reportsRouter } from './routes/report.routes.js';
-// import { notificationRouter } from './routes/notification.routes.js';
 import { AppError } from './utils/errors.js';
-// import { memberAuthRouter } from './routes/memberAuth.route.js';
 import { publicRouter } from './routes/public.route.js';
 import { unitRouter } from './routes/unit.route.js';
 import { roleRouter } from './routes/role.route.js';
@@ -25,6 +20,7 @@ import { notificationRouter } from './routes/notification.routes.js';
 import { announcementRouter } from './routes/announcement.routes.js';
 import { rosterRouter } from './routes/roster.routes.js';
 import { rosterEventRouter } from './routes/rosterEvent.routes.js';
+import { inngestRouter } from './routes/inngest.routes.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -80,6 +76,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use('/api/roles', roleRouter);
 app.use('/api/roster', rosterRouter);
 app.use('/api/roster/events', rosterEventRouter);
+app.use('/api/inngest', inngestRouter);
 
 app.use(express.static(clientDist));
 app.get('*', (req, res, next) => {
