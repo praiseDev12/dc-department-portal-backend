@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
 import { passwordResetEmail } from '../templates/passwordResetEmail.js';
+import { rosterAssignmentEmail } from '../templates/rosterAssignmentEmail.js';
 
 const transporter = nodemailer.createTransport({
   host: env.smtp.host,
@@ -26,8 +27,33 @@ export async function sendPasswordResetEmail({ email, resetUrl }) {
   });
 }
 
-// test SMTP connection
-// export async function verifyEmailConnection() {
-//   await transporter.verify();
-//   console.log('✅ Gmail SMTP connection is working');
-// }
+export async function sendRosterAssignmentEmail({
+  email,
+  memberName,
+  eventName,
+  roleName,
+  date,
+  startTime,
+  endTime,
+  location,
+  notificationType,
+}) {
+  const template = rosterAssignmentEmail({
+    memberName,
+    eventName,
+    roleName,
+    date,
+    startTime,
+    endTime,
+    location,
+    notificationType,
+  });
+
+  await transporter.sendMail({
+    from: env.smtp.from,
+    to: email,
+    subject: template.subject,
+    text: template.text,
+    html: template.html,
+  });
+}

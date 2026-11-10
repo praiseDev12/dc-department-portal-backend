@@ -67,6 +67,41 @@ const rosterAssignmentSchema = new mongoose.Schema(
       default: null,
     },
 
+    // Tracks email delivery separately from FCM delivery.
+    emailStatus: {
+      dayBefore: {
+        type: String,
+        enum: ['pending', 'processing', 'sent', 'failed', 'not_required'],
+        default: 'pending',
+      },
+
+      sameDay: {
+        type: String,
+        enum: ['pending', 'processing', 'sent', 'failed', 'not_required'],
+        default: 'pending',
+      },
+    },
+
+    dayBeforeEmailSentAt: {
+      type: Date,
+      default: null,
+    },
+
+    sameDayEmailSentAt: {
+      type: Date,
+      default: null,
+    },
+
+    dayBeforeEmailProcessingAt: {
+      type: Date,
+      default: null,
+    },
+
+    sameDayEmailProcessingAt: {
+      type: Date,
+      default: null,
+    },
+
     eventId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'RosterEvent',
