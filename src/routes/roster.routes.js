@@ -8,6 +8,7 @@ import {
   generateMonthlyRoster,
   getMonthlyRoster,
   getMonthlyRosterByTemplateMonth,
+  getMyRoster,
   getPublishedRosters,
   getRosterTemplates,
   publishMonthlyRoster,
@@ -69,6 +70,8 @@ rosterRouter.post(
   requireRole('unit_admin', 'main_admin'),
   generateMonthlyRoster,
 );
+
+rosterRouter.get('/my-roster', getMyRoster);
 
 rosterRouter.get(
   '/:rosterId',

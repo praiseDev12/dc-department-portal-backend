@@ -1065,3 +1065,102 @@ export const resetRosterData = async (req, res) => {
     });
   }
 };
+
+export const getMyRoster = async (req, res) => {
+  try {
+    const memberId = req.user?._id;
+
+    if (!memberId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required.',
+      });
+    }
+
+    const member = await Member.findById(memberId)
+      .select('_id department unit status')
+      .lean();
+
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        message: 'Member not found.',
+      });
+    }
+
+    if (member.status !== 'active') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is not active.',
+      });
+    }
+
+    const rosters = await MonthlyRoster.find({
+      department: member.department,
+      unit: member.unit,
+      status: 'published',
+      'occurrences.assignments.member': member._id,
+    })
+      .sort({ month: 1 })
+      .lean();
+
+    const assignments = [];
+
+    for (const roster of rosters) {
+      for (const occurrence of roster.occurrences || []) {
+        for (const assignment of occurrence.assignments || []) {
+          if (String(assignment.member) !== String(member._id)) {
+            continue;
+          }
+
+          assignments.push({
+            rosterId: roster._id,
+            rosterName: roster.name,
+            month: roster.month,
+
+            occurrenceId: occurrence._id,
+            assignmentId: assignment._id,
+
+            eventName: occurrence.eventName,
+            date: occurrence.date,
+            startTime: occurrence.startTime,
+            endTime: occurrence.endTime,
+            location: occurrence.location,
+
+            roleId: assignment.roleId,
+            roleName: assignment.roleName,
+
+            manuallyAssigned: assignment.manuallyAssigned,
+
+            notificationStatus: assignment.notificationStatus,
+            emailStatus: assignment.emailStatus,
+
+            dayBeforeSentAt: assignment.dayBeforeSentAt,
+            sameDaySentAt: assignment.sameDaySentAt,
+          });
+        }
+      }
+    }
+
+    assignments.sort((a, b) => {
+      const dateTimeA = `${a.date}T${a.startTime}`;
+      const dateTimeB = `${b.date}T${b.startTime}`;
+
+      return dateTimeA.localeCompare(dateTimeB);
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: assignments.length,
+      assignments,
+    });
+  } catch (error) {
+    console.error('Get my roster error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch your roster.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+};
