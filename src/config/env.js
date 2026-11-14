@@ -12,6 +12,7 @@ export const env = {
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   clientOriginPreview:
     process.env.CLIENT_ORIGIN_PREVIEW || 'http://localhost:4173',
+  inngest: process.env.CLIENT_INNGEST,
   departmentSetupCode: process.env.DEPARTMENT_SETUP_CODE,
   smtp: {
     host: process.env.SMTP_HOST,

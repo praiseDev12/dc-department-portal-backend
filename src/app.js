@@ -26,7 +26,7 @@ const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientDist = path.resolve(__dirname, '../../client/dist');
 
-const allowedOrigins = [env.clientOrigin, env.clientOriginPreview];
+const allowedOrigins = [env.clientOrigin, env.clientOriginPreview, env.inngest];
 
 app.use(helmet());
 
