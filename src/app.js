@@ -20,7 +20,9 @@ import { notificationRouter } from './routes/notification.routes.js';
 import { announcementRouter } from './routes/announcement.routes.js';
 import { rosterRouter } from './routes/roster.routes.js';
 import { rosterEventRouter } from './routes/rosterEvent.routes.js';
+import { birthdayRouter } from './routes/birthday.routes.js';
 import { inngestRouter } from './routes/inngest.routes.js';
+import birthdayTestRouter from './routes/birthdayTest.routes.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -76,6 +78,8 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use('/api/roles', roleRouter);
 app.use('/api/roster', rosterRouter);
 app.use('/api/roster/events', rosterEventRouter);
+app.use('/api/birthdays', birthdayRouter);
+app.use('/api/birthday-test', birthdayTestRouter);
 app.use('/api/inngest', inngestRouter);
 
 app.use(express.static(clientDist));
