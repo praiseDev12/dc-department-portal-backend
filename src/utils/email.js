@@ -14,6 +14,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// send password reset email to user with link to reset their password
 export async function sendPasswordResetEmail({ email, resetUrl }) {
   const template = passwordResetEmail({
     resetUrl,
@@ -28,6 +29,7 @@ export async function sendPasswordResetEmail({ email, resetUrl }) {
   });
 }
 
+//  send roster assignment email to member with details of their assignment
 export async function sendRosterAssignmentEmail({
   email,
   memberName,
@@ -59,6 +61,7 @@ export async function sendRosterAssignmentEmail({
   });
 }
 
+// send birthday summary email to department head with list of birthdays for the month
 export async function sendBirthdaySummaryEmail({
   email,
   departmentName,
