@@ -11,6 +11,6 @@ inngestRouter.use(
   '/',
   serve({
     client: inngest,
-    functions: [sendRosterNotification, scheduleRosterNotifications, ,],
+    functions: [sendRosterNotification, scheduleRosterNotifications],
   }),
 );
